@@ -43,6 +43,7 @@ SQLAlchemy.
 :hidden:
 
 start
+alembic
 engine
 session
 api

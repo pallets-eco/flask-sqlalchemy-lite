@@ -99,6 +99,8 @@ use Alembic directly, but it will require a little more setup.
 [Alembic]: https://alembic.sqlalchemy.org
 [Flask-Alembic]: https://flask-alembic.readthedocs.io
 
+See {doc}`alembic` for instructions.
+
 ---
 
 For basic uses, you can use the `metadata.create_all()` method. You can call
