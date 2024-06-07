@@ -20,8 +20,8 @@ autodoc_member_order = "bysource"
 autodoc_typehints = "description"
 autodoc_preserve_defaults = True
 extlinks = {
-    "issue": ("https://github.com/davidism/flask-sqlalchemy-lite/issues/%s", "#%s"),
-    "pr": ("https://github.com/davidism/flask-sqlalchemy-lite/pull/%s", "#%s"),
+    "issue": ("https://github.com/pallets-eco/flask-sqlalchemy-lite/issues/%s", "#%s"),
+    "pr": ("https://github.com/pallets-eco/flask-sqlalchemy-lite/pull/%s", "#%s"),
 }
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
@@ -40,7 +40,7 @@ html_static_path = ["_static"]
 html_css_files = ["theme.css"]
 html_copy_source = False
 html_theme_options = {
-    "source_repository": "https://github.com/davidism/flask-sqlalchemy-lite/",
+    "source_repository": "https://github.com/pallets-eco/flask-sqlalchemy-lite/",
     "source_branch": "main",
     "source_directory": "docs/",
     "light_css_variables": {
