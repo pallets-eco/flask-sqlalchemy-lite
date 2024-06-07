@@ -1,6 +1,6 @@
 # Getting Started
 
-This page walks through the common use of the extenion. See the rest of the
+This page walks through the common use of the extension. See the rest of the
 documentation for more details about other features.
 
 These docs cover how the extension works, _not_ how to use SQLAlchemy. Read the
