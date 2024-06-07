@@ -1,0 +1,5 @@
+aiosqlite
+coverage
+flask[async]
+sqlalchemy[asyncio]
+pytest
