@@ -19,6 +19,13 @@ dependencies = [
     "sqlalchemy[asyncio]",
 ]
 
+[project.urls]
+Donate = "https://palletsprojects.com/donate"
+Documentation = "https://flask-sqlalchemy-lite.readthedocs.io"
+Changes = "https://flask-sqlalchemy-lite.readthedocs.io"
+Source = "https://github.com/pallets-eco/flask-sqlalchemy-lite/"
+Chat = "https://discord.gg/pallets"
+
 [build-system]
 requires = ["flit_core<4"]
 build-backend = "flit_core.buildapi"
