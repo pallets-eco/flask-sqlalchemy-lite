@@ -10,11 +10,13 @@ can be configured and used at the same time.
 [Quart]: https://quart.palletsprojects.com
 [SQLAlchemy]: https://www.sqlalchemy.org
 
-Install it from PyPI using an installer such as pip:
+Install it from [PyPI] using an installer such as pip:
 
 ```
 $ pip install Flask-SQLAlchemy-Lite
 ```
+
+[PyPI]: https://pypi.org/project/Flask-SQLAlchemy-Lite
 
 This is intended to be a replacement for the [Flask-SQLAlchemy] extension. It
 provides the same `db.engine` and `db.session` interface. However, this
