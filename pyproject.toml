@@ -22,7 +22,7 @@ dependencies = [
 [project.urls]
 Donate = "https://palletsprojects.com/donate"
 Documentation = "https://flask-sqlalchemy-lite.readthedocs.io"
-Changes = "https://flask-sqlalchemy-lite.readthedocs.io"
+Changes = "https://flask-sqlalchemy-lite.readthedocs.io/page/changes/"
 Source = "https://github.com/pallets-eco/flask-sqlalchemy-lite/"
 Chat = "https://discord.gg/pallets"
 
