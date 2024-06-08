@@ -1,3 +1,3 @@
 ## Version 0.1.0
 
-Unreleased
+Released 2024-06-07

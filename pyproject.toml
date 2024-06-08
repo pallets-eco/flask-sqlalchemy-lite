@@ -1,6 +1,6 @@
 [project]
 name = "Flask-SQLAlchemy-Lite"
-version = "0.1.0.dev"
+version = "0.1.0"
 description = "Integrate SQLAlchemy with Flask."
 readme = "README.md"
 license = { file = "LICENSE.txt" }
