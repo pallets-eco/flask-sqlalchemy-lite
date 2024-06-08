@@ -97,8 +97,8 @@ The connection charset is set to `utf8mb4`.
 
 ## The Default Engine and Bind
 
-The `"default"` key is special, and will be used for {attr}`.SQLAlchemy.engine`
-and as the default bind for {attr}`.SQLAlchemy.sessionmaker`. By default, it is
+The `"default"` key is special, and will be used for {attr}`~.SQLAlchemy.engine`
+and as the default bind for {attr}`~.SQLAlchemy.sessionmaker`. By default, it is
 an error not to configure it for one of sync or async engines.
 
 
@@ -107,7 +107,7 @@ an error not to configure it for one of sync or async engines.
 You can ignore the Flask config altogether and create engines yourself. In that
 case, you pass `require_default_engine=False` when creating the extension to
 ignore the check for default config. Adding custom engines to the
-{attr}`.SQLAlchemy.engines` map will make them accessible through the extension,
+{attr}`~.SQLAlchemy.engines` map will make them accessible through the extension,
 but that's not required either. You will want to call
 `db.sessionmaker.configure(bind=..., binds=...)` to set up these custom engines
 if you plan to use the provided session management though.

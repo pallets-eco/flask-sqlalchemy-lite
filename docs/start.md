@@ -15,7 +15,7 @@ SQLAlchemy.
 Create an instance of {class}`.SQLAlchemy`. Define the
 {data}`.SQLALCHEMY_ENGINES` config, a dict, with at least the `"default"` key
 with a [connection string] value. When setting up the Flask app, call the
-extension's {meth}`.SQLAlchemy.init_app` method.
+extension's {meth}`~.SQLAlchemy.init_app` method.
 
 [connection string]: https://docs.sqlalchemy.org/core/engines.html#database-urls
 
@@ -200,6 +200,7 @@ be aware of than with sync usage.
 In particular, SQLAlchemy warns that the async sessions it provides are _not_
 safe to be used across concurrent tasks. For example, the same session should
 not be passed to multiple tasks when using `asyncio.gather`. Either use
-{meth}`db.get_async_session(name) <SQLAlchemy.get_async_session>` with a unique
-name for each task, or use {attr}`db.async_sessionmaker` to manage sessions
-and their lifetime manually. The latter is what SQLAlchemy recommends.
+{meth}`db.get_async_session(name) <.SQLAlchemy.get_async_session>` with a unique
+name for each task, or use
+{attr}`db.async_sessionmaker <.SQLAlchemy.async_sessionmaker>` to manage session
+lifetimes manually. The latter is what SQLAlchemy recommends.
