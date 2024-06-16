@@ -11,9 +11,9 @@ use Alembic directly, but it will require a little more setup.
 
 ## Flask-Alembic
 
-[Flask-Alembic] currently expects Flask-SQLAlchemy, not Flask-SQLAlchemy-Lite. The
-only difference is that it expects `db.metadata` to exist. You can assign this
-after defining your base model.
+[Flask-Alembic] will use the engines configured by Flask-SQLAlchemy-Lite. You
+need to tell it about the metadata object for your base model. Multiple
+databases are also supported, see the Flask-Alembic docs for details.
 
 ```python
 from flask import Flask
@@ -30,12 +30,11 @@ class User(Model):
     name: Mapped[str]
 
 db = SQLAlchemy()
-db.metadata = Model.metadata
-alembic = Alembic()
+alembic = Alembic(metadatas=Model.metadata)
 
 def create_app():
     app = Flask(__name__)
-    app.config |= {"SQLALCHEMY_ENGINES": {"default": "sqlite:///default.sqlite"}}
+    app.config["SQLALCHEMY_ENGINES"] = {"default": "sqlite:///default.sqlite"}
     app.config.from_prefixed_env()
     db.init_app(app)
     alembic.init_app(app)
