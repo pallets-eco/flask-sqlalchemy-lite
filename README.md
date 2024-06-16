@@ -13,6 +13,15 @@ developer use standard SQLAlchemy instead.
 [Flask]: https://flask.palletsprojects.com
 [Flask-SQLAlchemy]: https://flask-sqlalchemy.readthedocs.io
 
+## Pallets Community Ecosystem
+
+> [!IMPORTANT]\
+> This project is part of the Pallets Community Ecosystem. Pallets is the open
+> source organization that maintains Flask; Pallets-Eco enables community
+> maintenance of Flask extensions. If you are interested in helping maintain
+> this project, please reach out on [the Pallets Discord server][discord].
+>
+> [discord]: https://discord.gg/pallets
 
  ## A Simple Example
 
