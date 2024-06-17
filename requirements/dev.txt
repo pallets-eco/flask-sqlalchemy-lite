@@ -246,7 +246,7 @@ typing-extensions==4.12.1
     #   asgiref
     #   mypy
     #   sqlalchemy
-urllib3==2.2.1
+urllib3==2.2.2
     # via
     #   -r docs.txt
     #   requests
