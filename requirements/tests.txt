@@ -12,7 +12,7 @@ blinker==1.8.2
     # via flask
 click==8.1.7
     # via flask
-coverage==7.5.3
+coverage==7.5.4
     # via -r tests.in
 exceptiongroup==1.2.1
     # via pytest
@@ -38,7 +38,7 @@ pluggy==1.5.0
     # via pytest
 pytest==8.2.2
     # via -r tests.in
-sqlalchemy[asyncio]==2.0.30
+sqlalchemy[asyncio]==2.0.31
     # via -r tests.in
 tomli==2.0.1
     # via pytest

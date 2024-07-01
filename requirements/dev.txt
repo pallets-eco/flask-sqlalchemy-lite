@@ -46,7 +46,7 @@ click==8.1.7
     #   flask
 colorama==0.4.6
     # via tox
-coverage==7.5.3
+coverage==7.5.4
     # via -r tests.txt
 distlib==0.3.8
     # via virtualenv
@@ -123,7 +123,7 @@ mdurl==0.1.2
     # via
     #   -r docs.txt
     #   markdown-it-py
-mypy==1.10.0
+mypy==1.10.1
     # via -r typing.txt
 mypy-extensions==1.0.0
     # via
@@ -164,7 +164,7 @@ pygments==2.18.0
     #   sphinx
 pyproject-api==1.6.1
     # via tox
-pyright==1.1.366
+pyright==1.1.369
     # via -r typing.txt
 pytest==8.2.2
     # via
@@ -224,7 +224,7 @@ sphinxcontrib-serializinghtml==1.1.10
     # via
     #   -r docs.txt
     #   sphinx
-sqlalchemy[asyncio]==2.0.30
+sqlalchemy[asyncio]==2.0.31
     # via -r tests.txt
 tomli==2.0.1
     # via
