@@ -46,7 +46,7 @@ click==8.1.7
     #   flask
 colorama==0.4.6
     # via tox
-coverage==7.5.3
+coverage==7.6.0
     # via -r tests.txt
 distlib==0.3.8
     # via virtualenv
@@ -66,7 +66,7 @@ filelock==3.14.0
     #   virtualenv
 flask[async]==3.0.3
     # via -r tests.txt
-furo==2024.5.6
+furo==2024.7.18
     # via -r docs.txt
 greenlet==3.0.3
     # via
@@ -123,7 +123,7 @@ mdurl==0.1.2
     # via
     #   -r docs.txt
     #   markdown-it-py
-mypy==1.10.0
+mypy==1.11.1
     # via -r typing.txt
 mypy-extensions==1.0.0
     # via
@@ -155,7 +155,7 @@ pluggy==1.5.0
     #   -r typing.txt
     #   pytest
     #   tox
-pre-commit==3.7.1
+pre-commit==3.8.0
     # via -r dev.in
 pygments==2.18.0
     # via
@@ -164,9 +164,9 @@ pygments==2.18.0
     #   sphinx
 pyproject-api==1.6.1
     # via tox
-pyright==1.1.366
+pyright==1.1.374
     # via -r typing.txt
-pytest==8.2.2
+pytest==8.3.2
     # via
     #   -r tests.txt
     #   -r typing.txt
@@ -187,7 +187,7 @@ soupsieve==2.5
     # via
     #   -r docs.txt
     #   beautifulsoup4
-sphinx==7.3.7
+sphinx==7.4.7
     # via
     #   -r docs.txt
     #   furo
