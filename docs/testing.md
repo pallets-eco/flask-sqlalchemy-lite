@@ -95,7 +95,7 @@ def _manage_test_database():
 
     yield
 
-    for engine in engines:
+    for engine in engines.values():
         drop_database(engine.url)
 ```
 
