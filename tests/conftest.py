@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import collections.abc as cabc
 import os
 import typing as t
 from pathlib import Path
@@ -12,14 +13,27 @@ from flask_sqlalchemy_lite import SQLAlchemy
 
 
 @pytest.fixture
-def app(request: pytest.FixtureRequest, tmp_path: Path) -> Flask:
+def app(request: pytest.FixtureRequest, tmp_path: Path) -> cabc.Iterator[Flask]:
     app = Flask(request.module.__name__, instance_path=os.fspath(tmp_path / "instance"))
     app.config |= {
         "TESTING": True,
         "SQLALCHEMY_ENGINES": {"default": "sqlite://"},
         "SQLALCHEMY_ASYNC_ENGINES": {"default": "sqlite+aiosqlite://"},
     }
-    return app
+    yield app
+
+    # If a SQLAlchemy extension was registered, dispose of all its engines to
+    # avoid ResourceWarning: unclosed sqlite3.Connection.
+    try:
+        db: SQLAlchemy = app.extensions["sqlalchemy"]
+    except KeyError:
+        pass
+    else:
+        with app.app_context():
+            engines = db.engines.values()
+
+        for engine in engines:
+            engine.dispose()
 
 
 @pytest.fixture
