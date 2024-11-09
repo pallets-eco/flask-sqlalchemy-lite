@@ -16,7 +16,9 @@ You'll want to use the app factory pattern. It's possible to test without it,
 but that becomes a lot harder to reconfigure for testing. A factory paired with
 a test fixture ensures that each test is isolated to a separate app instance.
 
-Here's a general pattern for the Flask app factory:
+Here's a general pattern for the Flask app factory. When running the server, it
+will be called without arguments. The test fixture will call it and pass
+`test_config` to set a different engine URL and any other overrides.
 
 ```python
 from flask import Flask
@@ -40,7 +42,8 @@ def create_app(test_config=None):
     return app
 ```
 
-Then write an `app` test fixture to create an app for each test.
+Then write an `app` test fixture to create an app for each test. Note that a
+different URL is passed to the factory.
 
 ```python
 import pytest
@@ -53,6 +56,10 @@ def app():
     })
     yield app
 ```
+
+When writing the factory, we also defined `db = SQLAlchemy()` outside the
+factory. You import this throughout your app to make queries, and you will
+import it in your tests as well.
 
 
 ## Use a Test Database
@@ -187,6 +194,72 @@ apply.
 [pytest-asyncio]: https://pytest-asyncio.readthedocs.io
 
 
-## Tests
+## Testing Data Around Requests
 
-If you write typical tests
+While your Flask app will expose endpoints to modify your database, it can be
+inconvenient to create and inspect all your data for a test through requests. It
+might be easier to directly insert a model in exactly the form you need before a
+request, or directly query and examine the model after a request.
+
+Accessing `db.session` or `db.engine` requires an app context, so you can push
+one temporarily. *Do not make requests inside an active context, they
+will behave unexpectedly.*
+
+```python
+from project import db, User
+
+def test_update_user(app):
+    # Insert a user to be updated.
+    with app.app_context():
+        user = User(username="example", name="Example User")
+        db.session.add(user)
+        user_id = user.id
+
+    # Make a request to the update endpoint. Outside the app context!
+    client = app.test_client()
+    client.post(f"/user/update/{user_id}", data={"name": "Real Name"})
+
+    # Query the user and verify the update.
+    with app.app_context():
+        user = db.session.get(User, user_id)
+        assert user.name == "Real Name"
+```
+
+## Testing Data Without Requests
+
+You might also want to test your database models, or functions that work with
+them, directly rather than within a request. In that case, using a with block
+and extra indentation to push a context seems unnecessary.
+
+You can define a fixture that pushes an app context for the duration of the
+test. However, as warned above: *Do not make requests inside an active context,
+they will behave unexpectedly.* Only use this fixture for tests where you won't
+make requests.
+
+```python
+import pytest
+
+@pytest.fixture
+def app_ctx(app):
+    with app.app_context() as ctx:
+        yield ctx
+```
+
+Since you probably won't need to access the `ctx` value, you can depend on the
+fixture using a mark instead of an argument.
+
+```python
+from datetime import datetime, timedelta, UTC
+import pytest
+from project import db, User
+
+@pytest.mark.usefixtures("app_ctx")
+def test_deactivate_old_users():
+    db.session.add(User(active=True, last_seen=datetime.now(UTC) - timedelta(days=32)))
+    db.session.commit()
+    # before running the deactivate job, there is one active user
+    assert len(db.session.scalars(User).where(User.active).all()) == 1
+    User.deactivate_old_users()  # a method you wrote
+    # there are no longer any active users
+    assert len(db.session.scalars(User).where(User.active).all()) == 0
+```
