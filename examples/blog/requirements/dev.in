@@ -1,0 +1,7 @@
+-r base.txt
+coverage
+mypy
+pytest
+python-dotenv
+sqlalchemy-utils
+watchdog
