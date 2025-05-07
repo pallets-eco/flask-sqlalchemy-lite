@@ -83,6 +83,12 @@ class SQLAlchemy:
         app.teardown_appcontext(_close_async_sessions)
         app.shell_context_processor(add_models_to_shell)
 
+        if app.config.setdefault("SQLALCHEMY_RECORD_QUERIES", False):
+            from . import record_queries
+
+            for engine in engines.values():
+                record_queries._listen(engine)
+
     def _get_state(self) -> _State:
         app = current_app._get_current_object()  # type: ignore[attr-defined]
 
