@@ -3,13 +3,12 @@ name = "Flask-SQLAlchemy-Lite"
 version = "0.1.0"
 description = "Integrate SQLAlchemy with Flask."
 readme = "README.md"
-license = { file = "LICENSE.txt" }
-authors = [{ name = "David Lord" }]
+license = "MIT"
+license-files = ["LICENSE.txt"]
 maintainers = [{ name = "Pallets", email = "contact@palletsprojects.com" }]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Framework :: Flask",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
     "Typing :: Typed",
 ]
@@ -26,12 +25,47 @@ Changes = "https://flask-sqlalchemy-lite.readthedocs.io/page/changes/"
 Source = "https://github.com/pallets-eco/flask-sqlalchemy-lite/"
 Chat = "https://discord.gg/pallets"
 
+[dependency-groups]
+dev = [
+    "ruff",
+    "tox",
+    "tox-uv",
+]
+docs = [
+    "furo",
+    "myst-parser",
+    "sphinx",
+    "sphinxcontrib-log-cabinet",
+]
+docs-auto = [
+    "sphinx-autobuild",
+]
+gha-update = [
+    "gha-update ; python_full_version >= '3.12'",
+]
+pre-commit = [
+    "pre-commit",
+    "pre-commit-uv",
+]
+tests = [
+    "aiosqlite",
+    "coverage",
+    "pytest",
+]
+typing = [
+    "mypy",
+    "pyright",
+]
+
 [build-system]
-requires = ["flit_core<4"]
+requires = ["flit-core<4"]
 build-backend = "flit_core.buildapi"
 
 [tool.flit.module]
 name = "flask_sqlalchemy_lite"
+
+[tool.uv]
+default-groups = ["dev", "pre-commit", "tests", "typing"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -44,17 +78,24 @@ source = ["flask_sqlalchemy_lite", "tests"]
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]
 
+[tool.coverage.report]
+exclude_also = [
+    "if t.TYPE_CHECKING",
+    "raise NotImplementedError",
+    ": \\.{3}",
+]
+
 [tool.mypy]
 python_version = "3.9"
-files = ["src/flask_sqlalchemy_lite", "tests"]
+files = ["src", "tests"]
 show_error_codes = true
 pretty = true
 strict = true
 
 [tool.pyright]
 pythonVersion = "3.9"
-include = ["src/flask_sqlalchemy_lite", "tests"]
-typeCheckingMode = "basic"
+include = ["src", "tests"]
+typeCheckingMode = "standard"
 
 [tool.ruff]
 src = ["src"]
@@ -71,6 +112,9 @@ select = [
     "UP",  # pyupgrade
     "W",  # pycodestyle warning
 ]
+ignore = [
+    "UP038",  # keep isinstance tuple
+]
 
 [tool.ruff.lint.isort]
 force-single-line = true
@@ -80,3 +124,71 @@ order-by-type = false
 tag-only = [
     "slsa-framework/slsa-github-generator",
 ]
+
+[tool.tox]
+env_list = [
+    "py3.13", "py3.12", "py3.11", "py3.10", "py3.9",
+    "style",
+    "typing",
+    "docs",
+]
+
+[tool.tox.env_run_base]
+description = "pytest on latest dependency versions"
+runner = "uv-venv-lock-runner"
+package = "wheel"
+wheel_build_env = ".pkg"
+constrain_package_deps = true
+use_frozen_constraints = true
+dependency_groups = ["tests"]
+commands = [[
+    "pytest", "-v", "--tb=short", "--basetemp={env_tmp_dir}",
+    { replace = "posargs", default = [], extend = true },
+]]
+
+[tool.tox.env.style]
+description = "run all pre-commit hooks on all files"
+dependency_groups = ["pre-commit"]
+skip_install = true
+commands = [["pre-commit", "run", "--all-files"]]
+
+[tool.tox.env.typing]
+description = "run static type checkers"
+dependency_groups = ["tests", "typing"]
+commands = [
+    ["mypy"],
+    ["pyright"],
+    ["pyright", "--verifytypes", "flask_sqlalchemy_lite", "--ignoreexternal"],
+]
+
+[tool.tox.env.docs]
+description = "build docs"
+dependency_groups = ["docs"]
+commands = [["sphinx-build", "-E", "-W", "-b", "dirhtml", "docs", "docs/_build/dirhtml"]]
+
+[tool.tox.env.docs-auto]
+description = "continuously rebuild docs and start a local server"
+dependency_groups = ["docs", "docs-auto"]
+commands = [["sphinx-autobuild", "-W", "-b", "dirhtml", "--watch", "src", "docs", "docs/_build/dirhtml"]]
+
+[tool.tox.env.update-actions]
+description = "update GitHub Actions pins"
+labels = ["update"]
+dependency_groups = ["gha-update"]
+skip_install = true
+commands = [["gha-update"]]
+
+[tool.tox.env.update-pre_commit]
+description = "update pre-commit pins"
+labels = ["update"]
+dependency_groups = ["pre-commit"]
+skip_install = true
+commands = [["pre-commit", "autoupdate", "--freeze", "-j4"]]
+
+[tool.tox.env.update-requirements]
+description = "update uv lock"
+labels = ["update"]
+dependency_groups = []
+no_default_groups = true
+skip_install = true
+commands = [["uv", "lock", { replace = "posargs", default = ["-U"], extend = true }]]
