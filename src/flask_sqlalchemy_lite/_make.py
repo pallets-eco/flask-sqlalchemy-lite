@@ -4,7 +4,12 @@ import os
 import typing as t
 
 import sqlalchemy as sa
-from flask.sansio.app import App
+
+try:
+    # For Flask 3.X and later, use the sansio app
+    from flask.sansio.app import App
+except ImportError:
+    from flask.app import Flask as App
 from sqlalchemy import orm as orm
 from sqlalchemy.ext import asyncio as sa_async
 

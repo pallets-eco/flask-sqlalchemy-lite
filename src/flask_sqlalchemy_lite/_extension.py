@@ -9,7 +9,12 @@ import sqlalchemy.ext.asyncio as sa_async
 import sqlalchemy.orm as orm
 from flask import current_app
 from flask import g
-from flask.sansio.app import App
+
+try:
+    # For Flask 3.X and later, use the sansio app
+    from flask.sansio.app import App
+except ImportError:
+    from flask.app import Flask as App
 
 from ._cli import add_models_to_shell
 from ._make import _make_engines
