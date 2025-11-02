@@ -156,28 +156,30 @@ import pytest
 from project import create_app, db
 
 @pytest.fixture
-def app():
+def app(monkeypatch):
     app = create_app({
         "SQLALCHEMY_ENGINES": {"default": "postgresql:///project-test"}
     })
-
-    with app.app_context():
-        engines = db.engines
-
     cleanup = []
 
-    for key, engine in engines.items():
-        connection = engine.connect()
-        transaction = connection.begin()
-        engines[key] = connection
-        cleanup.append((key, engine, connection, transaction))
+    with app.app_context():
+        monkeypatch.setitem(
+            db.sessionmaker.kw, "join_transaction_mode", "create_savepoint"
+        )
+
+        for engine in db.engines.values():
+            connection = engine.connect()
+            transaction = connection.begin()
+            cleanup.append(transaction.rollback)
+            cleanup.append(connection.close)
+            connection.close = lambda: None
+            connection.begin = connection.begin_nested
+            monkeypatch.setattr(engine, "connect", lambda _c=connection: _c)
 
     yield app
 
-    for key, engine, connection, transaction in cleanup:
-        transaction.rollback()
-        connection.close()
-        engines[key] = engine
+    for f in cleanup:
+        f()
 ```
 
 This is not needed when using a SQLite in memory database as discussed above, as
