@@ -14,8 +14,8 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "flask[async]",
-    "sqlalchemy[asyncio]",
+    "flask[async]>=3.0.0",
+    "sqlalchemy[asyncio]>=2.0.31",
 ]
 
 [project.urls]
@@ -128,6 +128,7 @@ tag-only = [
 [tool.tox]
 env_list = [
     "py3.13", "py3.12", "py3.11", "py3.10", "py3.9",
+    "tests-min",
     "style",
     "typing",
     "docs",
@@ -145,6 +146,23 @@ commands = [[
     "pytest", "-v", "--tb=short", "--basetemp={env_tmp_dir}",
     { replace = "posargs", default = [], extend = true },
 ]]
+
+[tool.tox.env.tests-min]
+description = "pytest on minimum dependency versions"
+base_python = ["3.13"]
+commands_pre = [
+    [
+        "uv", "pip", "install",
+        "flask[async]==3.0.0",
+        "sqlalchemy==2.0.31",
+    ],
+]
+commands = [
+    [
+        "pytest", "-v", "--tb=short", "--basetemp={env_tmp_dir}",
+        { replace = "posargs", default = [], extend = true },
+    ],
+]
 
 [tool.tox.env.style]
 description = "run all pre-commit hooks on all files"
