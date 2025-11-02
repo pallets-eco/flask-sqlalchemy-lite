@@ -127,7 +127,7 @@ tag-only = [
 
 [tool.tox]
 env_list = [
-    "py3.13", "py3.12", "py3.11", "py3.10", "py3.9",
+    "py3.14", "py3.13", "py3.12", "py3.11", "py3.10", "py3.9",
     "tests-min",
     "style",
     "typing",
