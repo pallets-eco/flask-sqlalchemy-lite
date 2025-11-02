@@ -12,7 +12,7 @@ classifiers = [
     "Programming Language :: Python",
     "Typing :: Typed",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "flask[async]>=3.0.0",
     "sqlalchemy[asyncio]>=2.0.31",
@@ -86,14 +86,14 @@ exclude_also = [
 ]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 files = ["src", "tests"]
 show_error_codes = true
 pretty = true
 strict = true
 
 [tool.pyright]
-pythonVersion = "3.9"
+pythonVersion = "3.10"
 include = ["src", "tests"]
 typeCheckingMode = "standard"
 
@@ -127,7 +127,7 @@ tag-only = [
 
 [tool.tox]
 env_list = [
-    "py3.14", "py3.13", "py3.12", "py3.11", "py3.10", "py3.9",
+    "py3.14", "py3.13", "py3.12", "py3.11", "py3.10",
     "tests-min",
     "style",
     "typing",
