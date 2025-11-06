@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+import collections.abc as cabc
 import typing as t
+from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack
+from contextlib import contextmanager
+from contextlib import ExitStack
 from dataclasses import dataclass
+from unittest import mock
 from weakref import WeakKeyDictionary
 
 import sqlalchemy as sa
@@ -406,6 +412,89 @@ class SQLAlchemy:
         except (sa_exc.NoResultFound, sa_exc.MultipleResultsFound):
             abort(code, **(abort_kwargs or {}))
 
+    @contextmanager
+    def test_isolation(self) -> cabc.Iterator[None]:
+        """Context manager to isolate the database during a test. Commits are
+        rolled back when the ``with`` block exits, and will not be seen by other
+        tests.
+
+        This patches the SQLAlchemy engine and session to use a single
+        connection, in a transaction that is rolled back when the context exits.
+
+        If the code being tested uses async features, use
+        :meth:`async_test_isolation` instead. It will isolate both the sync and
+        async operations.
+
+        When using SQLite, follow the `SQLAlchemy docs`__ to fix the driver's
+        transaction handling.
+
+        __ https://docs.sqlalchemy.org/en/20/dialects/sqlite.html#sqlite-transactions
+
+        .. versionadded:: 0.2
+        """
+        with ExitStack() as exit_stack:
+            # Instruct the session to use nested transactions when it sees that
+            # its connection is already in a transaction.
+            exit_stack.enter_context(
+                mock.patch.dict(
+                    self.sessionmaker.kw, {"join_transaction_mode": "create_savepoint"}
+                )
+            )
+
+            for engine in self.engines.values():
+                # Create the connection, to be closed when the context exits.
+                connection: sa.Connection = exit_stack.enter_context(engine.connect())
+                # The connection cannot be closed by code being tested. This
+                # ensures the transaction remains active.
+                connection.close = _nop  # type: ignore[method-assign]
+                # The engine will always return the same connection, with the
+                # active transaction.
+                exit_stack.enter_context(
+                    mock.patch.object(engine, "connect", lambda _c=connection: _c)
+                )
+                # Start the transaction, to be rolled back when the context exits.
+                transaction = connection.begin()
+                exit_stack.callback(transaction.rollback)
+                # If code being tested tries to start the transaction, start a
+                # nested transaction instead.
+                connection.begin = connection.begin_nested  # type: ignore[assignment]
+
+            yield None
+
+    @asynccontextmanager
+    async def async_test_isolation(self) -> cabc.AsyncIterator[None]:
+        """Async version of :meth:`test_isolation` to be used as an
+        ``async with`` block. It will isolate the sync code as well, so you do
+        not need to use ``test_isolation`` as well.
+
+        .. versionadded:: 0.2
+        """
+        async with AsyncExitStack() as exit_stack:
+            # Also isolate the sync operations.
+            exit_stack.enter_context(self.test_isolation())
+
+            await exit_stack.enter_context(
+                mock.patch.dict(
+                    self.async_sessionmaker.kw,
+                    {"join_transaction_mode": "create_savepoint"},
+                )
+            )
+
+            for engine in self.async_engines.values():
+                connection: sa_async.AsyncConnection = (
+                    await exit_stack.enter_async_context(engine.connect())
+                )
+                connection.close = _async_nop  # type: ignore[method-assign]
+                connection.aclose = _async_nop  # type: ignore[method-assign]
+                exit_stack.enter_context(
+                    mock.patch.object(engine, "connect", lambda _c=connection: _c)
+                )
+                transaction = connection.begin()
+                exit_stack.push_async_callback(transaction.rollback)
+                connection.begin = connection.begin_nested  # type: ignore[method-assign]
+
+            yield None
+
 
 @dataclass
 class _State:
@@ -439,3 +528,11 @@ async def _close_async_sessions(e: BaseException | None) -> None:
 
     for session in sessions.values():
         await session.close()
+
+
+def _nop() -> None:
+    pass
+
+
+async def _async_nop() -> None:
+    pass
