@@ -170,6 +170,37 @@ def user_create():
     return app.redirect(app.url_for("user_list"))
 ```
 
+### Get or Abort
+
+A common pattern is to fetch a single row by some unique key in order to show
+a detail page for it. If the row doesn't exist, you want to return a 404 error.
+Some helper methods are provided to handle this.
+
+Use {meth}`.SQLAlchemy.get_or_abort` to get a model instance by primary key. If
+the key doesn't exist, it calls {func}`flask.abort` to raise a 404 error.
+
+```python
+@app.get("/invoice/<int:id>")
+def invoice_detail(id: int):
+    obj: Invoice = db.get_or_abort(Invoice, id)
+    ...
+```
+
+You might want to use some "natural key" rather than having the primary key in
+the URL. {meth}`.SQLAlchemy.one_or_abort` handles using an arbitrary select
+statement instead of the primary key. If there is not exactly one result, abort
+is called.
+
+```python
+@app.get("/invoice/<company>/<date>")
+def invoice_detail(company: str, date: str):
+    query = select(Invoice).where(Invoice.company == company, Invoice.date == date)
+    obj: Invoice = db.one_or_abort(query)
+    ...
+```
+
+The methods take more arguments to customize the query execution and abort
+arguments, see their docs for more.
 
 ### Application Context
 
