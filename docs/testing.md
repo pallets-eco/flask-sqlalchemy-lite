@@ -149,7 +149,8 @@ Each engine in `db.engines` can be patched to represent a connection with a
 transaction instead of a pool. Then all operations will occur inside the
 transaction and be discarded at the end, without writing anything permanently.
 
-Modify the `app` fixture to do this patching.
+Modify the `app` fixture to do this patching with the
+{meth}`.SQLAlchemy.test_isolation` context manager.
 
 ```python
 import pytest
@@ -160,32 +161,17 @@ def app(monkeypatch):
     app = create_app({
         "SQLALCHEMY_ENGINES": {"default": "postgresql:///project-test"}
     })
-    cleanup = []
 
-    with app.app_context():
-        monkeypatch.setitem(
-            db.sessionmaker.kw, "join_transaction_mode", "create_savepoint"
-        )
-
-        for engine in db.engines.values():
-            connection = engine.connect()
-            transaction = connection.begin()
-            cleanup.append(transaction.rollback)
-            cleanup.append(connection.close)
-            connection.close = lambda: None
-            connection.begin = connection.begin_nested
-            monkeypatch.setattr(engine, "connect", lambda _c=connection: _c)
-
-    yield app
-
-    for f in cleanup:
-        f()
+    with db.test_isolation():
+        yield app
 ```
 
 This is not needed when using a SQLite in memory database as discussed above, as
 each test will already be using a separate app with a separate in memory
-database.
+database. If you do use it with SQLite, you'll need to [fix the SQLite driver's
+transaction behavior, as described in SQLAlchemy's docs][transaction].
 
+[transaction]: https://docs.sqlalchemy.org/dialects/sqlite.html#sqlite-transactions
 
 ## Async
 
