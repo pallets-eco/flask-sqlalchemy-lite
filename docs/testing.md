@@ -83,7 +83,7 @@ for each model, and they will be available during all the tests.
 
 ```python
 import pytest
-from sqlalchemy_utils import create_database, drop_database
+from sqlalchemy_utils import create_database, drop_database, database_exists
 from project import create_app, db, Model
 
 @pytest.fixture(scope="session", autouse=True)
@@ -96,6 +96,9 @@ def _manage_test_database():
         engines = db.engines
 
     for engine in engines.values():
+        if database_exists(engine.url):
+            drop_database(engine.url)
+
         create_database(engine.url)
 
     Model.metadata.create_all(engines["default"])
@@ -250,4 +253,45 @@ def test_deactivate_old_users():
     User.deactivate_old_users()  # a method you wrote
     # there are no longer any active users
     assert len(db.session.scalars(User).where(User.active).all()) == 0
+```
+
+
+## Using `unittest`
+
+If you'd like to use Python's built-in {mod}`unittest` instead of pytest, here's
+the same fixtures:
+
+```python
+import unittest
+from sqlalchemy_utils import create_database, drop_database, database_exists
+from project import create_app, db, Model
+
+def setUp():
+    app = create_app({
+        "SQLALCHEMY_ENGINES": {"default": "postgresql:///project-test"}
+    })
+
+    with app.app_context():
+        engines = db.engines
+
+    for engine in engines.values():
+        if database_exists(engine.url):
+            drop_database(engine.url)
+
+        create_database(engine.url)
+
+    Model.metadata.create_all(engines["default"])
+
+    def drop_db():
+        for engine in engines.values():
+            drop_database(engine.url)
+
+    unittest.addModuleCleanup(drop_db)
+
+class AppTestCase(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app({
+            "SQLALCHEMY_ENGINES": {"default": "postgresql:///project-test"}
+        })
+        self.enterContext(db.test_isolation())
 ```
