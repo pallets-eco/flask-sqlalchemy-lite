@@ -18,6 +18,7 @@ from flask import abort
 from flask import current_app
 from flask import g
 from flask.sansio.app import App
+from sqlalchemy.orm.interfaces import ORMOption
 
 from ._cli import add_models_to_shell
 from ._make import _make_engines
@@ -246,10 +247,11 @@ class SQLAlchemy:
         entity: type[M] | orm.Mapper[M],
         ident: t.Any,
         *,
+        options: cabc.Sequence[ORMOption] | None = None,
+        get_kwargs: dict[str, t.Any] | None = None,
         session: orm.Session | None = None,
         code: int = 404,
         abort_kwargs: dict[str, t.Any] | None = None,
-        **kwargs: t.Any,
     ) -> M:
         """Call :meth:`Session.get_one <sqlalchemy.orm.Session.get_one>` and
         return the instance. If not found, call :func:`.abort` with a 404 error
@@ -257,18 +259,21 @@ class SQLAlchemy:
 
         :param entity: The model to query.
         :param ident: The primary key to query.
-        :param kwargs: Other arguments passed to ``session.get``.
+        :param options: The ``options`` argument passed to ``session.get``.
+        :param get_kwargs: Arguments passed to ``session.get``.
         :param session: The session to execute the query. Defaults to
             :attr:`session`.
         :param code: The HTTP error code.
-        :param abort_kwargs: Other arguments passed to ``abort``.
+        :param abort_kwargs: Arguments passed to ``abort``.
 
         .. versionadded:: 0.2
         """
         if session is None:
             session = self.session
 
-        if (obj := session.get(entity, ident, **kwargs)) is not None:
+        if (
+            obj := session.get(entity, ident, options=options, **(get_kwargs or {}))
+        ) is not None:
             return obj
 
         abort(code, **(abort_kwargs or {}))
@@ -278,10 +283,11 @@ class SQLAlchemy:
         entity: type[M] | orm.Mapper[M],
         ident: t.Any,
         *,
+        options: cabc.Sequence[ORMOption] | None = None,
+        get_kwargs: dict[str, t.Any] | None = None,
         session: sa_async.AsyncSession | None = None,
         code: int = 404,
         abort_kwargs: dict[str, t.Any] | None = None,
-        **kwargs: t.Any,
     ) -> M:
         """Async version of :meth:`get_or_abort`.
 
@@ -290,7 +296,11 @@ class SQLAlchemy:
         if session is None:
             session = self.async_session
 
-        if (obj := await session.get(entity, ident, **kwargs)) is not None:
+        if (
+            obj := await session.get(
+                entity, ident, options=options, **(get_kwargs or {})
+            )
+        ) is not None:
             return obj
 
         abort(code, **(abort_kwargs or {}))
@@ -301,10 +311,10 @@ class SQLAlchemy:
         select: sa.Select[tuple[M]],
         *,
         scalar: t.Literal[True] = True,
+        execute_kwargs: dict[str, t.Any] | None = None,
         session: orm.Session | None = None,
         code: int = 404,
         abort_kwargs: dict[str, t.Any] | None = None,
-        **kwargs: t.Any,
     ) -> M: ...
     @t.overload
     def one_or_abort(
@@ -312,20 +322,20 @@ class SQLAlchemy:
         select: sa.Select[TP],
         *,
         scalar: t.Literal[False],
+        execute_kwargs: dict[str, t.Any] | None = None,
         session: orm.Session | None = None,
         code: int = 404,
         abort_kwargs: dict[str, t.Any] | None = None,
-        **kwargs: t.Any,
     ) -> sa.Row[TP]: ...
     def one_or_abort(
         self,
         select: sa.Select[tuple[M]] | sa.Select[TP],
         *,
         scalar: bool = True,
+        execute_kwargs: dict[str, t.Any] | None = None,
         session: orm.Session | None = None,
         code: int = 404,
         abort_kwargs: dict[str, t.Any] | None = None,
-        **kwargs: t.Any,
     ) -> M | sa.Row[TP]:
         """Call :meth:`Session.execute <sqlalchemy.orm.Session.execute>` with the
         given select statement and return a single result. If zero or multiple
@@ -342,18 +352,18 @@ class SQLAlchemy:
         :param select: The select statement to execute.
         :param scalar: Whether to call :meth:`~sqlalchemy.engine.Result.scalar_one`
             on the result to return a scalar instead of a tuple.
-        :param kwargs: Other arguments passed to ``session.execute``.
+        :param execute_kwargs: Arguments passed to ``session.execute``.
         :param session: The session to execute the query. Defaults to
             :attr:`session`.
         :param code: The HTTP error code.
-        :param abort_kwargs: Other arguments passed to ``abort``.
+        :param abort_kwargs: Arguments passed to ``abort``.
 
         .. versionadded:: 0.2
         """
         if session is None:
             session = self.session
 
-        result = session.execute(select, **kwargs)
+        result = session.execute(select, **(execute_kwargs or {}))
 
         try:
             if scalar:
@@ -369,10 +379,10 @@ class SQLAlchemy:
         select: sa.Select[tuple[M]],
         *,
         scalar: t.Literal[True] = True,
+        execute_kwargs: dict[str, t.Any] | None = None,
         session: sa_async.AsyncSession | None = None,
         code: int = 404,
         abort_kwargs: dict[str, t.Any] | None = None,
-        **kwargs: t.Any,
     ) -> M: ...
     @t.overload
     async def async_one_or_abort(
@@ -380,20 +390,20 @@ class SQLAlchemy:
         select: sa.Select[TP],
         *,
         scalar: t.Literal[False],
+        execute_kwargs: dict[str, t.Any] | None = None,
         session: sa_async.AsyncSession | None = None,
         code: int = 404,
         abort_kwargs: dict[str, t.Any] | None = None,
-        **kwargs: t.Any,
     ) -> sa.Row[TP]: ...
     async def async_one_or_abort(
         self,
         select: sa.Select[tuple[M]] | sa.Select[TP],
         *,
         scalar: bool = True,
+        execute_kwargs: dict[str, t.Any] | None = None,
         session: sa_async.AsyncSession | None = None,
         code: int = 404,
         abort_kwargs: dict[str, t.Any] | None = None,
-        **kwargs: t.Any,
     ) -> M | sa.Row[TP]:
         """Async version of :meth:`one_or_abort`.
 
@@ -402,7 +412,7 @@ class SQLAlchemy:
         if session is None:
             session = self.async_session
 
-        result = await session.execute(select, **kwargs)
+        result = await session.execute(select, **(execute_kwargs or {}))
 
         try:
             if scalar:
