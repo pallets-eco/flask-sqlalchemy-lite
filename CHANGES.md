@@ -1,6 +1,6 @@
 ## Version 0.2.0
 
-Unreleased
+Released 2025-11-13
 
 -   Drop support for Python 3.9.
 -   Add `get_or_abort` and `one_or_abort` methods, which get a single row or
