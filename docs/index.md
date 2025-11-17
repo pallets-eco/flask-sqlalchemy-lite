@@ -41,6 +41,10 @@ SQLAlchemy.
 
 [SQLAlchemy docs]: https://docs.sqlalchemy.org
 
+## Source
+
+The project is hosted on GitHub: <https://github.com/pallets-eco/flask-sqlalchemy-lite>.
+
 ```{toctree}
 :hidden:
 
