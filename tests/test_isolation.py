@@ -39,3 +39,23 @@ def test_isolation(app: Flask, db: SQLAlchemy) -> None:
     # Deleted setup item has returned.
     with app.app_context():
         assert db.session.scalar(sa.select(sa.func.count(Todo.id))) == 1
+
+
+def test_app_ctx_not_required(app: Flask, db: SQLAlchemy) -> None:
+    with app.app_context():
+        Base.metadata.create_all(db.engine)
+
+    # isolation works without an app context already pushed
+    with db.test_isolation():
+        pass
+
+    # operations inside context are isolated
+    with db.test_isolation():
+        # context is pushed second, inside isolation
+        with app.app_context():
+            db.session.add(Todo())
+            db.session.commit()
+            assert db.session.scalar(sa.select(sa.func.count(Todo.id))) == 1
+
+    with app.app_context():
+        assert db.session.scalar(sa.select(sa.func.count(Todo.id))) == 0

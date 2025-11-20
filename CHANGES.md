@@ -2,6 +2,9 @@
 
 Unreleased
 
+-   `test_isolation` does not require an active app context, allowing it to be
+    used around other fixtures. {issue}`37`
+
 ## Version 0.2.0
 
 Released 2025-11-13

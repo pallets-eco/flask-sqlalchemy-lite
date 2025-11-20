@@ -443,31 +443,39 @@ class SQLAlchemy:
         .. versionadded:: 0.2
         """
         with ExitStack() as exit_stack:
-            # Instruct the session to use nested transactions when it sees that
-            # its connection is already in a transaction.
-            exit_stack.enter_context(
-                mock.patch.dict(
-                    self.sessionmaker.kw, {"join_transaction_mode": "create_savepoint"}
-                )
-            )
-
-            for engine in self.engines.values():
-                # Create the connection, to be closed when the context exits.
-                connection: sa.Connection = exit_stack.enter_context(engine.connect())
-                # The connection cannot be closed by code being tested. This
-                # ensures the transaction remains active.
-                connection.close = _nop  # type: ignore[method-assign]
-                # The engine will always return the same connection, with the
-                # active transaction.
+            for state in self._app_state.values():
+                # Instruct the session to use nested transactions when it sees that
+                # its connection is already in a transaction.
                 exit_stack.enter_context(
-                    mock.patch.object(engine, "connect", lambda _c=connection: _c)
+                    mock.patch.dict(
+                        state.sessionmaker.kw,
+                        {"join_transaction_mode": "create_savepoint"},
+                    )
                 )
-                # Start the transaction, to be rolled back when the context exits.
-                transaction = connection.begin()
-                exit_stack.callback(transaction.rollback)
-                # If code being tested tries to start the transaction, start a
-                # nested transaction instead.
-                connection.begin = connection.begin_nested  # type: ignore[assignment]
+
+                for engine in state.engines.values():
+                    # Create the connection, to be closed when the context exits.
+                    connection: sa.Connection = exit_stack.enter_context(
+                        engine.connect()
+                    )
+                    # The connection cannot be closed by code being tested. This
+                    # ensures the transaction remains active.
+                    exit_stack.enter_context(
+                        mock.patch.object(connection, "close", _nop)
+                    )
+                    # The engine will always return the same connection, with the
+                    # active transaction.
+                    exit_stack.enter_context(
+                        mock.patch.object(engine, "connect", lambda _c=connection: _c)
+                    )
+                    # Start the transaction, to be rolled back when the context exits.
+                    transaction = connection.begin()
+                    exit_stack.callback(transaction.rollback)
+                    # If code being tested tries to start the transaction, start a
+                    # nested transaction instead.
+                    exit_stack.enter_context(
+                        mock.patch.object(connection, "begin", connection.begin_nested)
+                    )
 
             yield None
 
@@ -483,25 +491,32 @@ class SQLAlchemy:
             # Also isolate the sync operations.
             exit_stack.enter_context(self.test_isolation())
 
-            await exit_stack.enter_context(
-                mock.patch.dict(
-                    self.async_sessionmaker.kw,
-                    {"join_transaction_mode": "create_savepoint"},
+            for state in self._app_state.values():
+                await exit_stack.enter_context(
+                    mock.patch.dict(
+                        state.async_sessionmaker.kw,
+                        {"join_transaction_mode": "create_savepoint"},
+                    )
                 )
-            )
 
-            for engine in self.async_engines.values():
-                connection: sa_async.AsyncConnection = (
-                    await exit_stack.enter_async_context(engine.connect())
-                )
-                connection.close = _async_nop  # type: ignore[method-assign]
-                connection.aclose = _async_nop  # type: ignore[method-assign]
-                exit_stack.enter_context(
-                    mock.patch.object(engine, "connect", lambda _c=connection: _c)
-                )
-                transaction = connection.begin()
-                exit_stack.push_async_callback(transaction.rollback)
-                connection.begin = connection.begin_nested  # type: ignore[method-assign]
+                for engine in state.async_engines.values():
+                    connection: sa_async.AsyncConnection = (
+                        await exit_stack.enter_async_context(engine.connect())
+                    )
+                    exit_stack.enter_context(
+                        mock.patch.object(connection, "close", _async_nop)
+                    )
+                    exit_stack.enter_context(
+                        mock.patch.object(connection, "aclose", _async_nop)
+                    )
+                    exit_stack.enter_context(
+                        mock.patch.object(engine, "connect", lambda _c=connection: _c)
+                    )
+                    transaction = connection.begin()
+                    exit_stack.push_async_callback(transaction.rollback)
+                    exit_stack.enter_context(
+                        mock.patch.object(connection, "begin", connection.begin_nested)
+                    )
 
             yield None
 
