@@ -1,6 +1,6 @@
 ## Version 0.2.1
 
-Unreleased
+Released 2025-11-20
 
 -   `test_isolation` does not require an active app context, allowing it to be
     used around other fixtures. {issue}`37`
