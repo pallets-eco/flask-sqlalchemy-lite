@@ -79,6 +79,18 @@ def test_multiple_sessions(db: SQLAlchemy) -> None:
     assert db.get_session("a") is other_session
 
 
+def test_multiple_apps(app: Flask) -> None:
+    """Distinct engines are used for each registered app."""
+    apps = (app, Flask(app.import_name, instance_path=app.instance_path))
+    apps[1].config.from_mapping(app.config)
+    db = SQLAlchemy(session_options={"binds": {Base: "default"}})
+    for app in apps:
+        db.init_app(app)
+        with app.app_context():
+            assert db.sessionmaker.kw["binds"][Base] is db.engine
+            assert db.async_sessionmaker.kw["binds"][Base] is db.async_engine
+
+
 def test_cleanup_sessions(app: Flask, db: SQLAlchemy) -> None:
     """Sessions are tracked and cleaned up with the app context."""
     with app.app_context() as ctx:

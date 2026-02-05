@@ -163,14 +163,18 @@ def _make_sessionmaker(
         options["bind"] = engines["default"]
 
     if "binds" in options:
-        for base, bind in options["binds"].items():
+        binds = options["binds"]
+        options["binds"] = binds.copy()
+        for base, bind in binds.items():
             if isinstance(bind, str):
                 if bind not in engines:
+                    if is_async:
+                        del options["binds"][base]
+                        continue
                     raise RuntimeError(
                         f"'{config_key}[\"{bind}\"]' is not defined, but is"
                         " used in 'session_options[\"binds\"]'."
                     )
-
                 options["binds"][base] = engines[bind]
 
     return make(**options)
